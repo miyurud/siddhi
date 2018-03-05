@@ -17,12 +17,14 @@
  */
 package org.wso2.siddhi.core.query.input.stream.single;
 
+import org.wso2.siddhi.core.config.SiddhiAppContext;
 import org.wso2.siddhi.core.event.MetaComplexEvent;
 import org.wso2.siddhi.core.query.input.ProcessStreamReceiver;
 import org.wso2.siddhi.core.query.input.stream.StreamRuntime;
 import org.wso2.siddhi.core.query.output.ratelimit.OutputRateLimiter;
 import org.wso2.siddhi.core.query.processor.Processor;
 import org.wso2.siddhi.core.query.processor.SchedulingProcessor;
+import org.wso2.siddhi.core.query.processor.stream.AbstractStreamProcessor;
 import org.wso2.siddhi.core.query.selector.QuerySelector;
 
 import java.util.ArrayList;
@@ -36,9 +38,11 @@ public class SingleStreamRuntime implements StreamRuntime {
     private Processor processorChain;
     private MetaComplexEvent metaComplexEvent;
     private ProcessStreamReceiver processStreamReceiver;
+    private SiddhiAppContext siddhiAppContext;
 
     public SingleStreamRuntime(ProcessStreamReceiver processStreamReceiver, Processor processorChain,
-                               MetaComplexEvent metaComplexEvent) {
+                               MetaComplexEvent metaComplexEvent, SiddhiAppContext siddhiAppContext) {
+        this.siddhiAppContext = siddhiAppContext;
         this.processStreamReceiver = processStreamReceiver;
         this.processorChain = processorChain;
         this.metaComplexEvent = metaComplexEvent;
@@ -97,7 +101,46 @@ public class SingleStreamRuntime implements StreamRuntime {
                 processor = processor.getNextProcessor();
             }
         }
-        return new SingleStreamRuntime(clonedProcessStreamReceiver, clonedProcessorChain, metaComplexEvent);
+        return new SingleStreamRuntime(clonedProcessStreamReceiver, clonedProcessorChain, metaComplexEvent,
+                siddhiAppContext);
+    }
+
+    @Override
+    public StreamRuntime clone(String queryName, String key) {
+        ProcessStreamReceiver clonedProcessStreamReceiver = this.processStreamReceiver.clone(key);
+        EntryValveProcessor entryValveProcessor = null;
+        SchedulingProcessor schedulingProcessor;
+        Processor clonedProcessorChain = null;
+        if (processorChain != null) {
+            if (!(processorChain instanceof QuerySelector || processorChain instanceof OutputRateLimiter)) {
+                clonedProcessorChain = processorChain.cloneProcessor(key);
+                if (clonedProcessorChain instanceof AbstractStreamProcessor) {
+                    AbstractStreamProcessor abstractStreamProcessor = (AbstractStreamProcessor) clonedProcessorChain;
+                    siddhiAppContext.getSnapshotService().addSnapshotable(queryName, abstractStreamProcessor);
+                }
+
+                if (clonedProcessorChain instanceof EntryValveProcessor) {
+                    entryValveProcessor = (EntryValveProcessor) clonedProcessorChain;
+                }
+            }
+            Processor processor = processorChain.getNextProcessor();
+            while (processor != null) {
+                if (!(processor instanceof QuerySelector || processor instanceof OutputRateLimiter)) {
+                    Processor clonedProcessor = processor.cloneProcessor(key);
+                    clonedProcessorChain.setToLast(clonedProcessor);
+                    if (clonedProcessor instanceof EntryValveProcessor) {
+                        entryValveProcessor = (EntryValveProcessor) clonedProcessor;
+                    } else if (clonedProcessor instanceof SchedulingProcessor) {
+                        schedulingProcessor = (SchedulingProcessor) clonedProcessor;
+                        schedulingProcessor.setScheduler(((SchedulingProcessor) processor).getScheduler().clone(
+                                key, entryValveProcessor));
+                    }
+                }
+                processor = processor.getNextProcessor();
+            }
+        }
+        return new SingleStreamRuntime(clonedProcessStreamReceiver, clonedProcessorChain, metaComplexEvent,
+                siddhiAppContext);
     }
 
     @Override

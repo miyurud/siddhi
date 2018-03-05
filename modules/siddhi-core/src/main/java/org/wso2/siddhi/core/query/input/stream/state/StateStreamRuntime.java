@@ -68,6 +68,11 @@ public class StateStreamRuntime implements StreamRuntime {
     }
 
     @Override
+    public StreamRuntime clone(String queryName, String key) {
+        return null;
+    }
+
+    @Override
     public void setCommonProcessor(Processor commonProcessor) {
         innerStateRuntime.setQuerySelector(commonProcessor);
         innerStateRuntime.setStartState();
