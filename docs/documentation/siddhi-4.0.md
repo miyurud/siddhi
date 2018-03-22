@@ -85,6 +85,13 @@ The following parameters are configured in a stream definition.
 | `attribute name`   | The schema of an stream is defined by its attributes with uniquely identifiable attribute names. (It is recommended to define attribute names in `camalCase`.)|    |
 | `attribute type`   | The type of each attribute defined in the schema. <br/> This can be `STRING`, `INT`, `LONG`, `DOUBLE`, `FLOAT`, `BOOL` or `OBJECT`.     |
 
+To improve the throughput of a stream, you can add the `@Async` annotation as shown in the extract below.
+
+```sql
+@app:Async(buffer.size = '1024') define stream <stream name> (<attribute name> <attribute type>, <attribute name> <attribute type>, ... );
+```
+This annotation adds a disruptor to allow events in the stream to be processed in parallel via multiple threads. You can specify the number of events to be kept in the buffer before they are directed to the threads to be processed in parallel. This is done via the `buffer.size` parameter.
+
 **Example**
 ```sql
 define stream TempStream (deviceID long, roomNo int, temp double);
@@ -136,6 +143,7 @@ The following is the list of source types that are currently supported:
 * <a target="_blank" href="https://wso2-extensions.github.io/siddhi-io-file/">File</a>
 * <a target="_blank" href="https://wso2-extensions.github.io/siddhi-io-rabbitmq/">RabbitMQ</a>
 * <a target="_blank" href="https://wso2-extensions.github.io/siddhi-io-mqtt/">MQTT</a>
+* <a target="_blank" href="https://wso2-extensions.github.io/siddhi-io-websocket/">WebSocket</a>
 
 **Source Mapper**
 
@@ -172,6 +180,7 @@ The following is a list of currently supported source mapping types:
 * <a target="_blank" href="https://wso2-extensions.github.io/siddhi-map-json/">JSON</a>
 * <a target="_blank" href="https://wso2-extensions.github.io/siddhi-map-binary/">Binary</a>
 * <a target="_blank" href="https://wso2-extensions.github.io/siddhi-map-keyvalue/">Key Value</a>
+* <a target="_blank" href="https://wso2-extensions.github.io/siddhi-map-csv/">CSV</a>
 
 **Example**
 
@@ -243,6 +252,7 @@ The following is a list of currently supported sink types.
 * <a target="_blank" href="https://wso2-extensions.github.io/siddhi-io-file/">File</a> 
 * <a target="_blank" href="https://wso2-extensions.github.io/siddhi-io-rabbitmq/">RabbitMQ</a>
 * <a target="_blank" href="https://wso2-extensions.github.io/siddhi-io-mqtt/">MQTT</a>
+* <a target="_blank" href="https://wso2-extensions.github.io/siddhi-io-websocket/">WebSocket</a>
 
 
 **Sink Mapper**
@@ -279,6 +289,7 @@ The following is a list of currently supported sink mapping types:
 * <a target="_blank" href="https://wso2-extensions.github.io/siddhi-map-json/">JSON</a>
 * <a target="_blank" href="https://wso2-extensions.github.io/siddhi-map-binary/">Binary</a>
 * <a target="_blank" href="https://wso2-extensions.github.io/siddhi-map-keyvalue/">Key Value</a>
+* <a target="_blank" href="https://wso2-extensions.github.io/siddhi-map-csv/">CSV</a>
 
 
 **Example**
@@ -1627,20 +1638,22 @@ The `condition` element specifies the basis on which events are selected for upd
 When specifying the `condition`, table attributes should be referred to with the table name. 
 If a record that matches the condition does not already exist in the table, the arriving event is inserted into the table.
 
-The `set` clause is only used when the update operation is performed and it is used during the insert operation. 
-When `set` clause is used the left hand side attribute should be always a table attribute and 
-the right hand side attribute can be stream/table attribute, mathematical 
- operations or other. When `set` clause is not provided all attributes in the table will be updated.  
+The `set` clause is only used when an update is performed during the insert/update operation. 
+When `set` clause is used, the attribute to the left is always a table attribute, and the attribute to the right can be a stream/table attribute, mathematical 
+operation or other. The attribute to the left (i.e., the attribute in the event table) is updated with the value of the attribute to the right if the given condition is met. When the `set` clause is not provided, all the attributes in the table are updated. 
+
+!!! note 
+    When the attribute to the right is a table attribute, the operations supported differ based on the database type.
  
 To execute update upon specific output event types use the `current events`, `expired events` or the `all events` keyword with `for` as shown
-in the syntax. To understand more refer [output event type](http://127.0.0.1:8000/documentation/siddhi-4.0/#output-event-types) section.
+in the syntax. To understand more see [output event type](http://127.0.0.1:8000/documentation/siddhi-4.0/#output-event-types).
 
 !!! note 
     Table attributes should be always referred to with the table name as `<table name>.<attibute name>`.
 
 **Example**
 
-The following query update for events in the `UpdateTable` event table that have room numbers that match the same in the `UpdateStream` stream. When such events are founding the event table, they are updated. When a room number available in the stream is not found in the event table, it is inserted from the stream.
+The following query update for events in the `UpdateTable` event table that have room numbers that match the same in the `UpdateStream` stream. When such events are found in the event table, they are updated. When a room number available in the stream is not found in the event table, it is inserted from the stream.
  
 ```sql
 define table RoomAssigneeTable (roomNo int, type string, assignee string);
@@ -2070,7 +2083,8 @@ The following parameters are configured when referring a script function.
 | `function name`| 	The name of the function referred.|
 | `parameter`| 	The function input parameter for function execution.|
 
-**Extension types**
+<a name="ExtensionTypes"></a>
+**Extension Types**
 
 Siddhi supports following extension types:
 
@@ -2209,18 +2223,18 @@ _We value your contribution on improving Siddhi and its extensions further._
 
 ### Writing Custom Extensions
 
-Custom extensions can be written in order to cater use case specific logic that are not available in Siddhi out of the box or as an existing extension. 
+Custom extensions can be written in order to cater use case specific logic that are not available in Siddhi out of the box or as an existing extension.
 
-There are five types of Siddhi extensions that you can write to cater your specific use cases. Please find each 
-extension types and related maven archetypes below. You can use these archetypes to generate maven projects for each 
+There are five types of Siddhi extensions that you can write to cater your specific use cases. These 
+extension types and the related maven archetypes are given below. You can use these archetypes to generate Maven projects for each 
 extension type.
 
-* Follow one of the step below, based on your project :
+* Follow the procedure for the required archetype, based on your project:
 
 
 **siddhi-execution**
 
-Siddhi-execution provides following extension types,
+Siddhi-execution provides following extension types:
 
 * Function
 * Aggregate Function
@@ -2228,47 +2242,55 @@ Siddhi-execution provides following extension types,
 * Stream Processor
 * Window
 
-You can use one or more from above mentioned extension types and implement according to your requirement. You can find more information about these extension types under the heading 'Extension types' in this document. 
+You can use one or more from above mentioned extension types and implement according to your requirement. 
 
-* Run the following command
+For more information about these extension types, see [Extension Types](#ExtensionTypes).
+
+To install and implement the siddhi-io extension archetype, follow the procedure below:
+
+1. Issue the following command from your CLI.
             
                 mvn archetype:generate
                     -DarchetypeGroupId=org.wso2.siddhi.extension.archetype
                     -DarchetypeArtifactId=siddhi-archetype-execution
-                    -DarchetypeVersion=1.0.1
                     -DgroupId=org.wso2.extension.siddhi.execution
                     -Dversion=1.0.0-SNAPSHOT
             
-* Then the system will pop-up the following message to enter the execution name
+2. Enter the required execution name in the message that pops up as shown in the example below.
            
-            eg:- Define value for property 'executionType': ML
+            Define value for property 'executionType': ML
             
-* Finally confirm all property values are correct or not by typing Y or press Enter, else type N
+3. To confirm that all property values are correct, type `Y` in the console. If not, press `N`.
                   
 **siddhi-io**
 
-Siddhi-io provides following extension types,
+Siddhi-io provides following extension types:
 
 * Sink
 * Source
 
-You can use one or more from above mentioned extension types and implement according to your requirement. siddhi-io generaly uses to work with IO operations. If you want get inputs to your Siddhi app, you can use 'Source' extension type. If you want to get outputs from your Siddhi app, you can use 'Sink' extension and implement it. You can find more information about these extension types under the heading 'Extension types' in this document. 
+You can use one or more from above mentioned extension types and implement according to your requirement. siddhi-io is generally used to work with IO operations as follows:
+ * The Source extension type gets inputs to your Siddhi application.
+ * The Sink extension publishes outputs from your Siddhi application. 
+
+For more information about these extension types, see [Extension Types](#ExtensionTypes).
+
+To implement the siddhi-io extension archetype, follow the procedure below:
     
-* Run the following command
+1. Issue the following command from your CLI.
                 
           
                mvn archetype:generate
                    -DarchetypeGroupId=org.wso2.siddhi.extension.archetype
                    -DarchetypeArtifactId=siddhi-archetype-io
-                   -DarchetypeVersion=1.0.1
                    -DgroupId=org.wso2.extension.siddhi.io
                    -Dversion=1.0.0-SNAPSHOT
             
-* Then the system will pop-up the following message to enter the typeOf_IO
+2. Enter the required execution name (the transport type in this scenario) in the message that pops up as shown in the example below.
            
-         eg:- Define value for property 'typeOf_IO': http
+         Define value for property 'typeOf_IO': http
 
-* Finally confirm all property values are correct or not by typing Y or press Enter, else type N
+3. To confirm that all property values are correct, type `Y` in the console. If not, press `N`.
          
 **siddhi-map**
 
@@ -2277,68 +2299,192 @@ Siddhi-map provides following extension types,
 * Sink Mapper
 * Source Mapper
 
-You can use one or more from above mentioned extension types and implement according to your requirement. Source Mapper is used to map events to a predefined data format (such as XML, JSON, binary, etc), and publishes them to external endpoints (such as E-mail, TCP, Kafka, HTTP, etc). Sink Mapper is used for same usecase, but in the time of publishing events from Siddhi app.You can find more information about these extension types under the heading 'Extension types' in this document. 
+You can use one or more from above mentioned extension types and implement according to your requirement as follows.
+
+* The Source Mapper maps events to a predefined data format (such as XML, JSON, binary, etc), and publishes them to external endpoints (such as E-mail, TCP, Kafka, HTTP, etc).
+* The Sink Mapper also maps events to a predefined data format, but it does it at the time of publishing events from a Siddhi application.
+
+For more information about these extension types, see [Extension Types](#ExtensionTypes).
+
+To implement the siddhi-map extension archetype, follow the procedure below:
         
-* Run the following command
-                    
+1. Issue the following command from your CLI.                
             
                 mvn archetype:generate
                     -DarchetypeGroupId=org.wso2.siddhi.extension.archetype
                     -DarchetypeArtifactId=siddhi-archetype-map
-                    -DarchetypeVersion=1.0.1
                     -DgroupId=org.wso2.extension.siddhi.map
                     -Dversion=1.0.0-SNAPSHOT
             
-* Then the system will pop-up the following message to enter the mapType
+2. Enter the required execution name (the map type in this scenario) in the message that pops up as shown in the example below.
        
-            eg:- Define value for property 'mapType':CSV
+            Define value for property 'mapType':CSV
     
-* Finally confirm all property values are correct or not by typing Y or press Enter, else type N
+3. To confirm that all property values are correct, type `Y` in the console. If not, press `N`.
                    
 **siddhi-script**
 
-Siddhi-script provides following extension types,
+Siddhi-script provides the `Script` extension type.
 
-* Script
+The script extension type allows you to write functions in other programming languages and execute them within Siddhi queries. Functions defined via scripts can be accessed in queries similar to any other inbuilt function. 
 
-You can use script extension type to write functions in other programming languages and execute them within Siddhi queries. Functions defined via scripts can be accessed in queries similar to any other inbuilt function. You can find more information about these extension types under the heading 'Extension types' in this document. 
+For more information about these extension types, see [Extension Types](#ExtensionTypes).
 
-* Run the following command
-                        
+To implement the siddhi-script extension archetype, follow the procedure below:
+
+1. Issue the following command from your CLI.                   
            
                mvn archetype:generate
                    -DarchetypeGroupId=org.wso2.siddhi.extension.archetype
                    -DarchetypeArtifactId=siddhi-archetype-script
-                   -DarchetypeVersion=1.0.1
                    -DgroupId=org.wso2.extension.siddhi.script
                    -Dversion=1.0.0-SNAPSHOT
            
-* Then the system will pop-up the following message to enter the script type
+2. Enter the required execution name in the message that pops up as shown in the example below.
        
-         eg:- Define value for property 'typeOfScript':
+         Define value for property 'typeOfScript':
 
-* Finally confirm all property values are correct or not by typing Y or press Enter, else type N
+3. To confirm that all property values are correct, type `Y` in the console. If not, press `N`.
        
 **siddhi-store**
 
-Siddhi-store provides following extension types,
+Siddhi-store provides the `Store` extension type.
 
-* Store
+The Store extension type allows you to work with data/events stored in various data stores through the table abstraction. 
 
-You can use Store extension type to work with data/events stored in various data stores through the table abstraction. You can find more information about these extension types under the heading 'Extension types' in this document. 
+For more information about these extension types, see [Extension Types](#ExtensionTypes).
 
-* Run the following command
-                            
+To implement the siddhi-store extension archetype, follow the procedure below:
+
+1. Issue the following command from your CLI.                      
    
                mvn archetype:generate
                   -DarchetypeGroupId=org.wso2.siddhi.extension.archetype
                   -DarchetypeArtifactId=siddhi-archetype-store
-                  -DarchetypeVersion=1.0.1
                   -DgroupId=org.wso2.extension.siddhi.store
                   -Dversion=1.0.0-SNAPSHOT
            
-* Then the system will pop-up the following message to enter the store type
+2. Enter the required execution name in the message that pops up as shown in the example below.
                           
-          eg:- Define value for property 'storeType': RDBMS
+          Define value for property 'storeType': RDBMS
     
-* Finally confirm all property values are correct or not by typing Y or press Enter, else type N
+3. To confirm that all property values are correct, type `Y` in the console. If not, press `N`.
+
+## Configuring and Monitoring Siddhi Applications
+
+This section explains how to use the `@app` annotation to generate statistics for Siddhi applications as well as improve the performance of Siddhi applications.
+
+### @app:statistics
+
+To evaluate the performance of an application, you can enable the statistics of a Siddhi application to be published. This is done via the `@app:statistics` annotation that can be added to a Siddhi application as shown in the following example.
+
+```sql
+@app:statistics(reporter = 'console')
+```
+The following elements are configured with this annotation.
+
+|Annotation| Description| Default Value|
+| ------------- |-------------|-------------|
+|`reporter`|The interface in which statistics for the Siddhi application are published. Possible values are as follows:<br/> `console`<br/> `jmx`|`console`|
+|`interval`|The time interval (in seconds) at  which the statistics for the Siddhi application are reported.|`60`|
+|`include`|If this parameter is added, only the types of metrics you specify are included in the reporting. The required metric types can be specified as a comma-separated list. It is also possible to use wild cards| All (*.*)|
+
+The metrics are reported in the following format.
+`org.wso2.siddhi.SiddhiApps.<SiddhiAppName>.Siddhi.<Component Type>.<Component Name>. <Metrics name>`
+
+The following table lists the types of metrics supported for different Siddhi application component types.
+
+|Component Type|Metrics Type|
+| ------------- |-------------|
+|Stream|Throughput<br/>The size of the buffer if parallel processing is enabled via the @async annotation.|
+|Trigger|Throughput (Trigger and Stream)|
+|Source|Throughput|
+|Sink|Throughput|
+|Mapper|Latency<br/>Input/output throughput<br/>
+|Table|Memory<br/>Throughput (For all operations)<br/>Throughput (For all operations)|
+|Query|Memory<br/>Latency|
+|Window|Throughput (For all operations)<br/>Latency (For all operation)|
+|Partition|Throughput (For all operations)<br/>Latency (For all operation)|
+
+
+
+e.g., the following is a Siddhi application that includes the `@app` annotation to report performance statistics.
+
+```sql
+@App:name('TestMetrics')
+@App:Statistics(reporter = 'console')
+
+@Async(buffer.size='64')
+define stream TestStream (message string);
+
+@info(name='logQuery')
+from TestSream#log("Message:")
+insert into TempSream;
+```
+
+Statistics are reported for this Siddhi application as shown in the extract below.
+
+<details>
+  <summary>Click to view the extract</summary>
+11/26/17 8:01:20 PM ============================================================
+
+ -- Gauges ----------------------------------------------------------------------
+ org.wso2.siddhi.SiddhiApps.TestMetrics.Siddhi.Queries.logQuery.memory
+              value = 5760
+ org.wso2.siddhi.SiddhiApps.TestMetrics.Siddhi.Streams.TestStream.size
+              value = 0
+ 
+ -- Meters ----------------------------------------------------------------------
+ org.wso2.siddhi.SiddhiApps.TestMetrics.Siddhi.Sources.TestStream.http.throughput
+              count = 0
+          mean rate = 0.00 events/second
+      1-minute rate = 0.00 events/second
+      5-minute rate = 0.00 events/second
+     15-minute rate = 0.00 events/second
+ org.wso2.siddhi.SiddhiApps.TestMetrics.Siddhi.Streams.TempSream.throughput
+              count = 2
+          mean rate = 0.04 events/second
+      1-minute rate = 0.03 events/second
+      5-minute rate = 0.01 events/second
+     15-minute rate = 0.00 events/second
+ org.wso2.siddhi.SiddhiApps.TestMetrics.Siddhi.Streams.TestStream.throughput
+              count = 2
+          mean rate = 0.04 events/second
+      1-minute rate = 0.03 events/second
+      5-minute rate = 0.01 events/second
+     15-minute rate = 0.00 events/second
+ 
+ -- Timers ----------------------------------------------------------------------
+ org.wso2.siddhi.SiddhiApps.TestMetrics.Siddhi.Queries.logQuery.latency
+              count = 2
+          mean rate = 0.11 calls/second
+      1-minute rate = 0.34 calls/second
+      5-minute rate = 0.39 calls/second
+     15-minute rate = 0.40 calls/second
+                min = 0.61 milliseconds
+                max = 1.08 milliseconds
+               mean = 0.84 milliseconds
+             stddev = 0.23 milliseconds
+             median = 0.61 milliseconds
+               75% <= 1.08 milliseconds
+               95% <= 1.08 milliseconds
+               98% <= 1.08 milliseconds
+               99% <= 1.08 milliseconds
+             99.9% <= 1.08 milliseconds
+
+
+</details>
+
+### @app:playback
+
+When this annotation is included, the timestamp of the event (specified via an attribute) is treated as the current time. This results in events being processed faster.
+The following elements are configured with this annotation.
+
+|Annotation| Description|
+| ------------- |-------------|
+|`idle.time`|If no events are received during a time interval specified (in milliseconds) via this element, the Siddhi system time is incremented by a number of seconds specified via the `increment` element.|
+|`increment`|The number of seconds by which the Siddhi system time must be incremented if no events are received during the time interval specified via the `idle.time` element.|
+
+e.g., In the following example, the Siddhi system time is incremented by two seconds if no events arrive for a time interval of 100 milliseconds.
+
+`@app:playback(idle.time = '100 millisecond', increment = '2 sec') `
