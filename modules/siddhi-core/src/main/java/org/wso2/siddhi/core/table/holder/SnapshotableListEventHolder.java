@@ -21,14 +21,11 @@ package org.wso2.siddhi.core.table.holder;
 import org.wso2.siddhi.core.event.ComplexEvent;
 import org.wso2.siddhi.core.event.ComplexEventChunk;
 import org.wso2.siddhi.core.event.SnapshotableComplexEventChunk;
-import org.wso2.siddhi.core.event.stream.Operation;
 import org.wso2.siddhi.core.event.stream.StreamEvent;
 import org.wso2.siddhi.core.event.stream.StreamEventPool;
 import org.wso2.siddhi.core.event.stream.converter.StreamEventConverter;
 import org.wso2.siddhi.core.util.snapshot.Snapshot;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.Map;
 
 /**

@@ -26,7 +26,6 @@ import org.wso2.siddhi.core.event.stream.StreamEventPool;
 import org.wso2.siddhi.core.event.stream.converter.StreamEventConverter;
 import org.wso2.siddhi.core.util.snapshot.Snapshot;
 
-import java.util.LinkedList;
 import java.util.Map;
 
 /**
@@ -53,7 +52,6 @@ public class ListEventHolder extends SnapshotableComplexEventChunk<StreamEvent> 
             StreamEvent streamEvent2 = tableStreamEventPool.borrowEvent();
             eventConverter.convertComplexEvent(complexEvent, streamEvent);
             eventConverter.convertComplexEvent(complexEvent, streamEvent2);
-            //this.add(streamEvent);
             this.add(streamEvent, streamEvent2);
         }
     }

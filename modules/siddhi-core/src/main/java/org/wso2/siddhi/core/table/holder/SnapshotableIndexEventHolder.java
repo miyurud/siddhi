@@ -22,7 +22,6 @@ import org.apache.log4j.Logger;
 import org.wso2.siddhi.core.config.SiddhiAppContext;
 import org.wso2.siddhi.core.event.ComplexEvent;
 import org.wso2.siddhi.core.event.ComplexEventChunk;
-import org.wso2.siddhi.core.event.SnapshotableComplexEventChunk;
 import org.wso2.siddhi.core.event.stream.Operation;
 import org.wso2.siddhi.core.event.stream.Operator;
 import org.wso2.siddhi.core.event.stream.StreamEvent;
@@ -35,7 +34,16 @@ import org.wso2.siddhi.query.api.definition.AbstractDefinition;
 import org.wso2.siddhi.query.api.expression.condition.Compare;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
 
 /**
  * EventHolder implementation where events will be indexed and stored. This will offer faster access compared to
@@ -643,7 +651,7 @@ public class SnapshotableIndexEventHolder implements IndexedEventHolder, Seriali
                                 this.overwrite((StreamEvent) op.parameters);
                                 break;
                             case Operator.REMOVE2:
-                                delete((String)((Object[])op.parameters)[0],
+                                delete((String) ((Object[]) op.parameters)[0],
                                         (Compare.Operator) ((Object[]) op.parameters)[1],
                                         ((Object[]) op.parameters)[2]);
                                 break;
@@ -651,12 +659,13 @@ public class SnapshotableIndexEventHolder implements IndexedEventHolder, Seriali
                                 this.deleteAll();
                                 break;
                             case Operator.REMOVE:
-                                this.deleteAll((Collection<StreamEvent>)op.parameters);
+                                this.deleteAll((Collection<StreamEvent>) op.parameters);
                                 break;
                             case Operator.CLEARALL:
                                 // this.changeLog.add(new Operation(Operator.CLEARALL, storeEventSet))
                                 //this.delete((Collection<StreamEvent>) op.parameters);
                                 this.deleteAll((Collection<StreamEvent>) op.parameters);
+                                break;
                             default:
                                 continue;
                         }
@@ -679,7 +688,7 @@ public class SnapshotableIndexEventHolder implements IndexedEventHolder, Seriali
                             //changeLogForVariable.add(new Operation(operator, (StreamEvent) parameters));
                             break;
                         case Operator.REMOVE2:
-                            delete((String)((Object[])op.parameters)[0],
+                            delete((String) ((Object[]) op.parameters)[0],
                                     (Compare.Operator) ((Object[]) op.parameters)[1],
                                     ((Object[]) op.parameters)[2]);
                             break;
@@ -690,6 +699,7 @@ public class SnapshotableIndexEventHolder implements IndexedEventHolder, Seriali
                             // this.changeLog.add(new Operation(Operator.CLEARALL, storeEventSet))
                             //this.delete((Collection<StreamEvent>) op.parameters);
                             this.deleteAll((Collection<StreamEvent>) op.parameters);
+                            break;
                         default:
                             continue;
                     }

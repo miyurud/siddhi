@@ -107,11 +107,8 @@ public class EventHolderPasser {
                 }
 
             }
-//            return new IndexEventHolder(tableStreamEventPool, eventConverter, primaryKeyReferenceHolders, isNumeric,
-//                    indexMetaData, tableDefinition, siddhiAppContext);
-
-            return new SnapshotableIndexEventHolder(tableStreamEventPool, eventConverter, primaryKeyReferenceHolders, isNumeric,
-                    indexMetaData, tableDefinition, siddhiAppContext);
+            return new SnapshotableIndexEventHolder(tableStreamEventPool, eventConverter, primaryKeyReferenceHolders,
+                    isNumeric, indexMetaData, tableDefinition, siddhiAppContext);
         } else {
             return new ListEventHolder(tableStreamEventPool, eventConverter);
         }

@@ -49,27 +49,6 @@ public class PersistenceService {
         this.context = siddhiAppContext;
     }
 
-//    public String persist() {
-//
-//        if (persistenceStore != null) {
-//            if (log.isDebugEnabled()) {
-//                log.debug("Persisting...");
-//            }
-//            byte[] snapshot = snapshotService.snapshot().fullState;
-//            String revision = System.currentTimeMillis() + "_" + siddhiAppName;
-//            persistenceStore.save(siddhiAppName, revision, snapshot);
-//
-//            if (log.isDebugEnabled()) {
-//                log.debug("Persisted.");
-//            }
-//            return revision;
-//        } else {
-//            throw new NoPersistenceStoreException("No persistence store assigned for siddhi app " +
-//                    siddhiAppName);
-//        }
-//
-//    }
-
     public void restoreRevision(String revision) throws CannotRestoreSiddhiAppStateException {
         if (persistenceStore != null) {
             if (log.isDebugEnabled()) {
@@ -109,8 +88,6 @@ public class PersistenceService {
                 snapshots.put(element.get(2), hmap2);
             }
 
-            //snapshotService.recoverFromIncrementalSnapshots(element.get(3), snapshots);
-
             snapshotService.restore(snapshots);
             if (log.isDebugEnabled()) {
                 log.debug("Restored revision: " + revision);
@@ -135,6 +112,7 @@ public class PersistenceService {
     }
 
     public void restore(byte[] snapshot) throws CannotRestoreSiddhiAppStateException {
+        //TODO:Need to implement the proper restore operation here
         //snapshotService.restore(snapshot);
     }
 }

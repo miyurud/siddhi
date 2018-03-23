@@ -208,7 +208,6 @@ public class InMemoryTable extends Table implements Snapshotable {
 
     @Override
     public void restoreState(Map<String, Object> state) {
-        //eventHolder = (EventHolder) state.get("EventHolder");
         eventHolder = (EventHolder) eventHolder.restore("EventHolder", state);
     }
 

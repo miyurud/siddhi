@@ -195,7 +195,6 @@ public class TimeWindowProcessor extends WindowProcessor implements SchedulingPr
     @Override
     public Map<String, Object> currentState() {
         Map<String, Object> state = new HashMap<>();
-        //state.put("ExpiredEventChunk", expiredEventChunk.getFirst());
         state.put("ExpiredEventChunk", expiredEventChunk.getSnapshot());
         return state;
     }
@@ -203,7 +202,6 @@ public class TimeWindowProcessor extends WindowProcessor implements SchedulingPr
     @Override
     public void restoreState(Map<String, Object> state) {
         expiredEventChunk.clear();
-        //expiredEventChunk.add((StreamEvent) state.get("ExpiredEventChunk"));
         expiredEventChunk.restore("ExpiredEventChunk", state);
     }
 }

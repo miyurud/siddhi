@@ -178,7 +178,7 @@ public class LengthWindowProcessor extends WindowProcessor implements FindablePr
     public synchronized void restoreState(Map<String, Object> state) {
         count = (int) state.get("Count");
         expiredEventChunk.clear();
-        expiredEventChunk = (SnapshotableComplexEventChunk<StreamEvent>) expiredEventChunk.restore("ExpiredEventChunk", state);
-        //expiredEventChunk.add(((SnapshotableComplexEventChunk<StreamEvent>) expiredEventChunk.restore("ExpiredEventChunk", state)).getFirst());
+        expiredEventChunk = (SnapshotableComplexEventChunk<StreamEvent>) expiredEventChunk.
+                restore("ExpiredEventChunk", state);
     }
 }

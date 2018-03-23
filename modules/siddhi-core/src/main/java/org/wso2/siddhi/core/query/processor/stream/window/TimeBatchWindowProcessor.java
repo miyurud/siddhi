@@ -288,11 +288,10 @@ public class TimeBatchWindowProcessor extends WindowProcessor implements Schedul
     public synchronized void restoreState(Map<String, Object> state) {
         if (expiredEventChunk != null) {
             expiredEventChunk.clear();
-            //expiredEventChunk.add((StreamEvent) state.get("ExpiredEventChunk"));
             expiredEventChunk.restore("ExpiredEventChunk", state);
         }
         currentEventChunk.clear();
-        //currentEventChunk.add((StreamEvent) state.get("CurrentEventChunk"));
+
         if (expiredEventChunk != null) {
             expiredEventChunk.restore("currentEventChunk", state);
         }
