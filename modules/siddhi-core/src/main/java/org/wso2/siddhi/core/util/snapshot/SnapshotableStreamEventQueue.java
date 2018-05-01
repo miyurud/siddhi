@@ -253,7 +253,8 @@ public class SnapshotableStreamEventQueue implements Iterator<StreamEvent>, Seri
         if (first != null ? !first.equals(that.first) : that.first != null) {
             return false;
         }
-        return operationChangeLog != null ? operationChangeLog.equals(that.operationChangeLog) : that.operationChangeLog == null;
+        return operationChangeLog != null ? operationChangeLog.equals(that.operationChangeLog) :
+                that.operationChangeLog == null;
     }
 
     @Override

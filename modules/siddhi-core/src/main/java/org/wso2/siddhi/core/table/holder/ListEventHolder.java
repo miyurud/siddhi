@@ -53,4 +53,15 @@ public class ListEventHolder extends SnapshotableStreamEventQueue implements Eve
             this.add(streamEvent);
         }
     }
+
+    @Override
+    public boolean equals(Object o) {
+        return super.equals(o);
+    }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
 }

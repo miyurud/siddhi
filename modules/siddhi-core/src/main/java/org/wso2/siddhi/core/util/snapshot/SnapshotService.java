@@ -39,7 +39,8 @@ public class SnapshotService {
     private static final ThreadLocal<Boolean> skipSnapshotableThreadLocal = new ThreadLocal<Boolean>();
 
     private final ThreadBarrier threadBarrier;
-    private ConcurrentHashMap<String, List<Snapshotable>> snapshotableMap = new ConcurrentHashMap<String, List<Snapshotable>>();
+    private ConcurrentHashMap<String, List<Snapshotable>> snapshotableMap =
+            new ConcurrentHashMap<String, List<Snapshotable>>();
     private SiddhiAppContext siddhiAppContext;
 
     public SnapshotService(SiddhiAppContext siddhiAppContext) {
