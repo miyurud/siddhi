@@ -21,10 +21,10 @@ package org.wso2.siddhi.core.table.holder;
 import org.wso2.siddhi.core.event.ComplexEvent;
 import org.wso2.siddhi.core.event.ComplexEventChunk;
 import org.wso2.siddhi.core.event.stream.StreamEvent;
-import org.wso2.siddhi.core.event.stream.StreamEventCloner;
 import org.wso2.siddhi.core.event.stream.StreamEventPool;
 import org.wso2.siddhi.core.event.stream.converter.StreamEventConverter;
-import org.wso2.siddhi.core.util.snapshot.SnapshotableStreamEventQueue;
+import org.wso2.siddhi.core.event.stream.holder.SnapshotableStreamEventQueue;
+import org.wso2.siddhi.core.event.stream.holder.StreamEventClonerHolder;
 
 /**
  * Holder object to contain a list of {@link StreamEvent}. Users can add {@link ComplexEventChunk}s to the
@@ -37,8 +37,8 @@ public class ListEventHolder extends SnapshotableStreamEventQueue implements Eve
     private StreamEventConverter eventConverter;
 
     public ListEventHolder(StreamEventPool tableStreamEventPool, StreamEventConverter eventConverter,
-                           StreamEventCloner streamEventCloner) {
-        super(streamEventCloner);
+                           StreamEventClonerHolder streamEventClonerHolder) {
+        super(streamEventClonerHolder);
         this.tableStreamEventPool = tableStreamEventPool;
         this.eventConverter = eventConverter;
     }

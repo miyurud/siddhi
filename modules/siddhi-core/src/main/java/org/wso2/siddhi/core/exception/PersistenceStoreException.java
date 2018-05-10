@@ -15,33 +15,25 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
-package org.wso2.siddhi.core.util.snapshot.state;
-
-import java.io.Serializable;
+package org.wso2.siddhi.core.exception;
 
 /**
- * The class which encloses the state to be serialized.
+ * Exception class to be used when issue occur at persistence store.
  */
-public class SnapshotState implements Serializable {
-    private Object state;
-    private boolean isIncrementalSnapshot;
-
-    public SnapshotState(Object state) {
-        this.state = state;
-        this.isIncrementalSnapshot = false;
+public class PersistenceStoreException extends RuntimeException {
+    public PersistenceStoreException() {
+        super();
     }
 
-    public SnapshotState(Object state, boolean isIncrementalSnapshot) {
-        this.state = state;
-        this.isIncrementalSnapshot = isIncrementalSnapshot;
+    public PersistenceStoreException(String message) {
+        super(message);
     }
 
-    public boolean isIncrementalSnapshot() {
-        return isIncrementalSnapshot;
+    public PersistenceStoreException(String message, Throwable throwable) {
+        super(message, throwable);
     }
 
-    public Object getState() {
-        return state;
+    public PersistenceStoreException(Throwable throwable) {
+        super(throwable);
     }
 }

@@ -16,10 +16,26 @@
  * under the License.
  */
 
-package org.wso2.siddhi.core.util.snapshot.state;
+package org.wso2.siddhi.core.util.snapshot;
 
 /**
- * Common snapshot data holder
+ * Snapshot request type ThreadLocal holder
  */
-public interface SnapshotStateHolder {
+public class SnapshotRequest {
+    private static final ThreadLocal<Boolean> requestForFullSnapshot =
+            new ThreadLocal<Boolean>() {
+                @Override
+                protected Boolean initialValue() {
+                    return false;
+                }
+            };
+
+    public static void requestForFullSnapshot(boolean enable) {
+        requestForFullSnapshot.set(enable);
+    }
+
+    public static boolean isRequestForFullSnapshot() {
+        return requestForFullSnapshot.get();
+    }
+
 }

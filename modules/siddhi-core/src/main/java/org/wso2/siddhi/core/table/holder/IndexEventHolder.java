@@ -28,8 +28,8 @@ import org.wso2.siddhi.core.event.stream.StreamEventPool;
 import org.wso2.siddhi.core.event.stream.converter.StreamEventConverter;
 import org.wso2.siddhi.core.exception.OperationNotSupportedException;
 import org.wso2.siddhi.core.util.SiddhiConstants;
+import org.wso2.siddhi.core.util.snapshot.SnapshotRequest;
 import org.wso2.siddhi.core.util.snapshot.state.SnapshotState;
-import org.wso2.siddhi.core.util.snapshot.state.SnapshotStateHolder;
 import org.wso2.siddhi.core.util.snapshot.state.SnapshotStateList;
 import org.wso2.siddhi.query.api.definition.AbstractDefinition;
 import org.wso2.siddhi.query.api.expression.condition.Compare;
@@ -71,7 +71,7 @@ public class IndexEventHolder implements IndexedEventHolder, Serializable {
     private Map<String, Integer> indexMetaData;
     private Map<String, Integer> multiPrimaryKeyMetaData = new LinkedHashMap<>();
     private Map<String, Integer> allIndexMetaData = new HashMap<>();
-    private ArrayList<Operation> operationChangeLog;
+    private ArrayList<Operation> operationChangeLog = new ArrayList<>();
     private long eventsCount;
     private static final float FULL_SNAPSHOT_THRESHOLD = 2.1f;
     private boolean forceFullSnapshot = true;
@@ -612,8 +612,9 @@ public class IndexEventHolder implements IndexedEventHolder, Serializable {
     }
 
     private boolean isFullSnapshot() {
-        return (operationChangeLog.size() > (eventsCount * FULL_SNAPSHOT_THRESHOLD)) && (eventsCount != 0) ||
-                forceFullSnapshot;
+        return operationChangeLog.size() > (eventsCount * FULL_SNAPSHOT_THRESHOLD)
+                || forceFullSnapshot
+                || SnapshotRequest.isRequestForFullSnapshot();
     }
 
     public SnapshotState getSnapshot() {
@@ -627,8 +628,8 @@ public class IndexEventHolder implements IndexedEventHolder, Serializable {
         }
     }
 
-    public void restore(SnapshotStateHolder snapshotStateHolder) {
-        TreeMap<Long, SnapshotState> revisions = ((SnapshotStateList) snapshotStateHolder).getSnapshotStates();
+    public void restore(SnapshotStateList snapshotStatelist) {
+        TreeMap<Long, SnapshotState> revisions = snapshotStatelist.getSnapshotStates();
         Iterator<Map.Entry<Long, SnapshotState>> itr = revisions.entrySet().iterator();
         this.isOperationLogEnabled = false;
         while (itr.hasNext()) {
@@ -636,10 +637,14 @@ public class IndexEventHolder implements IndexedEventHolder, Serializable {
             if (!snapshotEntry.getValue().isIncrementalSnapshot()) {
                 this.deleteAll();
                 IndexEventHolder snapshotEventHolder = (IndexEventHolder) snapshotEntry.getValue().getState();
-                primaryKeyData.clear();
-                primaryKeyData.putAll(snapshotEventHolder.primaryKeyData);
-                indexData.clear();
-                indexData.putAll(snapshotEventHolder.indexData);
+                if (primaryKeyData != null) {
+                    primaryKeyData.clear();
+                    primaryKeyData.putAll(snapshotEventHolder.primaryKeyData);
+                }
+                if (indexData != null) {
+                    indexData.clear();
+                    indexData.putAll(snapshotEventHolder.indexData);
+                }
                 forceFullSnapshot = false;
             } else {
                 ArrayList<Operation> operations = (ArrayList<Operation>) snapshotEntry.getValue().getState();

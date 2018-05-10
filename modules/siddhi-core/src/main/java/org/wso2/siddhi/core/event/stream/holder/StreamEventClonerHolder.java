@@ -16,32 +16,29 @@
  * under the License.
  */
 
-package org.wso2.siddhi.core.util.snapshot.state;
+package org.wso2.siddhi.core.event.stream.holder;
 
-import java.io.Serializable;
+import org.wso2.siddhi.core.event.stream.StreamEventCloner;
 
 /**
- * The class which encloses the state to be serialized.
+ * Holder to have StreamEventCloner
  */
-public class SnapshotState implements Serializable {
-    private Object state;
-    private boolean isIncrementalSnapshot;
+public class StreamEventClonerHolder {
 
-    public SnapshotState(Object state) {
-        this.state = state;
-        this.isIncrementalSnapshot = false;
+    private StreamEventCloner streamEventCloner = null;
+
+    public StreamEventClonerHolder() {
     }
 
-    public SnapshotState(Object state, boolean isIncrementalSnapshot) {
-        this.state = state;
-        this.isIncrementalSnapshot = isIncrementalSnapshot;
+    public StreamEventClonerHolder(StreamEventCloner streamEventCloner) {
+        this.streamEventCloner = streamEventCloner;
     }
 
-    public boolean isIncrementalSnapshot() {
-        return isIncrementalSnapshot;
+    public StreamEventCloner getStreamEventCloner() {
+        return streamEventCloner;
     }
 
-    public Object getState() {
-        return state;
+    public void setStreamEventCloner(StreamEventCloner streamEventCloner) {
+        this.streamEventCloner = streamEventCloner;
     }
 }

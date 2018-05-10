@@ -99,7 +99,7 @@ public class QueryParser {
             if (nameElement != null) {
                 queryName = nameElement.getValue();
             } else {
-                queryName = "query_" + queryIndex + "_" + UUID.randomUUID().toString();
+                queryName = "query_" + queryIndex;
             }
             latencyTracker = QueryParserHelper.createLatencyTracker(siddhiAppContext, queryName,
                     SiddhiConstants.METRIC_INFIX_QUERIES, null);
@@ -194,7 +194,8 @@ public class QueryParser {
 
             OutputCallback outputCallback = OutputParser.constructOutputCallback(query.getOutputStream(),
                     streamRuntime.getMetaComplexEvent().getOutputStreamDefinition(), tableMap, windowMap,
-                    siddhiAppContext, !(streamRuntime instanceof SingleStreamRuntime), queryName);
+                    siddhiAppContext, !(streamRuntime instanceof SingleStreamRuntime) ||
+                            !query.getSelector().getGroupByList().isEmpty(), queryName);
 
             QueryParserHelper.reduceMetaComplexEvent(streamRuntime.getMetaComplexEvent());
             QueryParserHelper.updateVariablePosition(streamRuntime.getMetaComplexEvent(), executors);

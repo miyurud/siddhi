@@ -27,6 +27,7 @@ import org.wso2.siddhi.core.event.ComplexEventChunk;
 import org.wso2.siddhi.core.event.state.StateEvent;
 import org.wso2.siddhi.core.event.stream.StreamEvent;
 import org.wso2.siddhi.core.event.stream.StreamEventCloner;
+import org.wso2.siddhi.core.event.stream.holder.SnapshotableStreamEventQueue;
 import org.wso2.siddhi.core.executor.ConstantExpressionExecutor;
 import org.wso2.siddhi.core.executor.ExpressionExecutor;
 import org.wso2.siddhi.core.executor.VariableExpressionExecutor;
@@ -39,8 +40,7 @@ import org.wso2.siddhi.core.util.collection.operator.MatchingMetaInfoHolder;
 import org.wso2.siddhi.core.util.collection.operator.Operator;
 import org.wso2.siddhi.core.util.config.ConfigReader;
 import org.wso2.siddhi.core.util.parser.OperatorParser;
-import org.wso2.siddhi.core.util.snapshot.SnapshotableStreamEventQueue;
-import org.wso2.siddhi.core.util.snapshot.state.SnapshotStateHolder;
+import org.wso2.siddhi.core.util.snapshot.state.SnapshotStateList;
 import org.wso2.siddhi.query.api.definition.Attribute;
 import org.wso2.siddhi.query.api.exception.SiddhiAppValidationException;
 import org.wso2.siddhi.query.api.expression.Expression;
@@ -116,9 +116,9 @@ public class TimeBatchWindowProcessor extends WindowProcessor implements Schedul
             outputExpectsExpiredEvents, SiddhiAppContext siddhiAppContext) {
         this.outputExpectsExpiredEvents = outputExpectsExpiredEvents;
         this.siddhiAppContext = siddhiAppContext;
-        currentEventQueue = new SnapshotableStreamEventQueue(streamEventCloner);
+        currentEventQueue = new SnapshotableStreamEventQueue(streamEventClonerHolder);
         if (outputExpectsExpiredEvents) {
-            this.expiredEventQueue = new SnapshotableStreamEventQueue(streamEventCloner);
+            this.expiredEventQueue = new SnapshotableStreamEventQueue(streamEventClonerHolder);
         }
         if (attributeExpressionExecutors.length == 1) {
             if (attributeExpressionExecutors[0] instanceof ConstantExpressionExecutor) {
@@ -288,11 +288,9 @@ public class TimeBatchWindowProcessor extends WindowProcessor implements Schedul
     @Override
     public synchronized void restoreState(Map<String, Object> state) {
         if (expiredEventQueue != null) {
-            expiredEventQueue.clear();
-            expiredEventQueue.restore((SnapshotStateHolder) state.get("ExpiredEventQueue"));
+            expiredEventQueue.restore((SnapshotStateList) state.get("ExpiredEventQueue"));
         }
-        currentEventQueue.clear();
-        currentEventQueue.restore((SnapshotStateHolder) state.get("CurrentEventQueue"));
+        currentEventQueue.restore((SnapshotStateList) state.get("CurrentEventQueue"));
         resetEvent = (StreamEvent) state.get("ResetEvent");
     }
 
@@ -307,7 +305,7 @@ public class TimeBatchWindowProcessor extends WindowProcessor implements Schedul
                                               List<VariableExpressionExecutor> variableExpressionExecutors,
                                               Map<String, Table> tableMap, String queryName) {
         if (expiredEventQueue == null) {
-            expiredEventQueue = new SnapshotableStreamEventQueue(streamEventCloner);
+            expiredEventQueue = new SnapshotableStreamEventQueue(streamEventClonerHolder);
         }
         return OperatorParser.constructOperator(expiredEventQueue, condition, matchingMetaInfoHolder,
                 siddhiAppContext, variableExpressionExecutors, tableMap,
